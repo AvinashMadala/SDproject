@@ -51,7 +51,7 @@
                 </nav>
                 <div class="container-fluid">
                     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-                        <h3 class="text-dark mb-0">Dashboard</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" role="button" href="#"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Download Data</a></div>
+                        <h3 class="text-dark mb-0">Dashboard</h3><a class="btn btn-primary btn-sm d-none d-sm-inline-block" href="../data/download_data/" target="_blank" role="button" href="#"><i class="fas fa-download fa-sm text-white-50"></i>&nbsp;Download Data</a></div>
                     <div class="row">
                         <div class="col-md-6 col-xl-3 mb-4">
                             <div class="card shadow border-left-primary py-2">
@@ -59,7 +59,7 @@
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
                                             <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>ToTal CASES</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span>400,000</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span id='total_count'>400,000</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -71,10 +71,10 @@
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
                                             <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>ACTIVE CASES</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span>215,000</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span id='active_count'>215,000</span></div>
                                         </div>
                                         <div class="col-auto">
-                                            <p>40%</p>
+                                            <p id="active_percentage">40%</p>
                                         </div>
                                     </div>
                                 </div>
@@ -88,12 +88,12 @@
                                             <div class="text-uppercase text-info font-weight-bold text-xs mb-1"><span>DEAD</span></div>
                                             <div class="row no-gutters align-items-center">
                                                 <div class="col-auto">
-                                                    <div class="text-dark font-weight-bold h5 mb-0 mr-3"><span>50000</span></div>
+                                                    <div class="text-dark font-weight-bold h5 mb-0 mr-3"><span id='death_count'>50000</span></div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <p>20%</p>
+                                            <p id="death_percentage">20%</p>
                                         </div>
                                     </div>
                                 </div>
@@ -105,7 +105,7 @@
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
                                             <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>DAILY AVERAGE</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span>18</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span id="daily_average">18</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -141,10 +141,17 @@
                                     </div>
                                 </div>
                                 <div class="card-body">
-                                    <div class="chart-area">
-                                        <canvas data-bs-chart="{&quot;type&quot;:&quot;doughnut&quot;,&quot;data&quot;:{&quot;labels&quot;:[&quot;age > 60&quot;,&quot;age - 30 to 60&quot;,&quot;age 15 - 30&quot;],&quot;datasets&quot;:[{&quot;label&quot;:&quot;&quot;,&quot;backgroundColor&quot;:[&quot;#4e73df&quot;,&quot;#1cc88a&quot;,&quot;#36b9cc&quot;],&quot;borderColor&quot;:[&quot;#ffffff&quot;,&quot;#ffffff&quot;,&quot;#ffffff&quot;],&quot;data&quot;:[&quot;50&quot;,&quot;30&quot;,&quot;15&quot;]}]},&quot;options&quot;:{&quot;maintainAspectRatio&quot;:false,&quot;legend&quot;:{&quot;display&quot;:false},&quot;title&quot;:{}}}"></canvas></div>
-                                    <div
-                                        class="text-center small mt-4"><span class="mr-2"><i class="fas fa-circle text-primary"></i>&nbsp;&gt; 60</span><span class="mr-2"><i class="fas fa-circle text-success"></i>&nbsp;30 - 60</span><span class="mr-2"><i class="fas fa-circle text-info"></i>&nbsp;15-30</span></div>
+                                    <div class="chart-area w-100 h-100">
+                                        <canvas id="age_donut" height="350" width="350"></canvas>
+                                    </div>
+                                    <div class="text-center small mt-4">
+                                        <span class="mr-2"><i class="fas fa-circle " style="color: #5cbacc;" ></i>&nbsp;&lt; 5</span>
+                                        <span class="mr-2"><i class="fas fa-circle " style="color: #66d185;" ></i>&nbsp;5 - 20</span>
+                                        <span class="mr-2"><i class="fas fa-circle " style="color: #4e73df;" ></i>&nbsp;20 - 40</span>
+                                        <span class="mr-2"><i class="fas fa-circle " style="color: #f5cd54;" ></i>&nbsp;40 - 60</span>
+                                        <span class="mr-2"><i class="fas fa-circle " style="color: #ee9e3d;" ></i>&nbsp;&gt; 60</span>
+
+                                    </div>
                             </div>
                         </div>
                     </div>
@@ -241,7 +248,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
     <script src="{% static 'assets/js/bs-init.js' %}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.19/lodash.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script> -->
     <script src="{% static 'assets/js/theme.js' %}"></script>
+    <script src="{% static 'assets/js/script.js' %}"></script>
 </body>
 
 </html>

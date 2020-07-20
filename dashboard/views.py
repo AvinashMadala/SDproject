@@ -7,7 +7,8 @@ import json
 import csv
 import numpy as np
 import random
-
+from dashboard.models import fetch_age_data
+from dashboard.models import fetch_covid_data
 
 # Create your views here.
 def home(request):
@@ -19,14 +20,12 @@ def example(request):
 
 def get_data(request):
 
-    directory = os.path.abspath(os.path.dirname(__file__))
-    data_path = os.path.join(directory,'static', 'data', 'covid_19_data.csv')
-    df = pd.read_csv(data_path)
+    df = fetch_covid_data()
     df = df.rename(columns={'Province/State': 'province', 'Country/Region': 'country', 'Last Update': 'updated_date'})
     df = df.drop(['SNo', 'ObservationDate'], axis=1)
     # get countries cases count
     agg_by_country = df.groupby(['country']).agg({'Confirmed': 'sum', 'Deaths': 'sum', 'Recovered': 'sum'}).sort_values(by='Confirmed', ascending=False)
-
+    agg_by_country = agg_by_country.reset_index()
     # get cases count by each month
     df['updated_date'] = pd.to_datetime(df['updated_date'])
     df['month'] = df['updated_date'].dt.month_name().str.slice(stop=3).str.lower()
@@ -68,9 +67,7 @@ def download_data(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="covid-dashboard-data.csv"'
 
-    directory = os.path.abspath(os.path.dirname(__file__))
-    data_path = os.path.join(directory,'static', 'data', 'covid_19_data.csv')
-    df = pd.read_csv(data_path)
+    df = fetch_covid_data()
     df = df.rename(columns={'Province/State': 'province', 'Country/Region': 'country', 'Last Update': 'updated_date'})
     df = df.drop(['SNo', 'ObservationDate'], axis=1)
     df['updated_date'] = pd.to_datetime(df['updated_date'])
@@ -82,9 +79,7 @@ def download_data(request):
 
 def get_age_data(request):
 
-    directory = os.path.abspath(os.path.dirname(__file__))
-    data_path = os.path.join(directory,'static', 'data', 'covid19_patients_data.csv')
-    df = pd.read_csv(data_path)
+    df = fetch_age_data()
     # filter only necessary columns needed
     df = df[['ID', 'age', 'sex', 'country', 'date_confirmation']]
     list_sample = df['age'][~df['age'].isna()]

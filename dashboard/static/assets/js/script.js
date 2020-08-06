@@ -14,16 +14,16 @@ $.get("data/all_data/", function (resp) {
     let country_aggs = JSON.parse(resp.country_aggs);
     let month_aggs = JSON.parse(resp.month_aggs);
 
-    $("#total_count").html(stats.total_confirmed.toLocaleString("en"));
-    $("#death_count").html(stats.total_deaths.toLocaleString("en"));
-    $("#active_count").html(stats.active.toLocaleString("en"));
+    $(".display_total_count").html(stats.total_confirmed.toLocaleString("en"));
+    $(".display_death_count").html(stats.total_deaths.toLocaleString("en"));
+    $(".display_active_count").html(stats.active.toLocaleString("en"));
 
     let active_percent = (stats.active / stats.total_confirmed) * 100
     let deaths_percent = (stats.total_deaths / stats.total_confirmed) * 100;
 
-    $("#active_percentage").html(active_percent.toFixed(1) + '%');
-    $("#death_percentage").html(deaths_percent.toFixed(1) + "%");
-    $("#daily_average").html((stats.daily_avg.toFixed()).toLocaleString("en"));
+    $(".display_active_percentage").html(active_percent.toFixed(1) + "%");
+    $(".display_death_percentage").html(deaths_percent.toFixed(1) + "%");
+    $(".display_daily_average").html((stats.daily_avg.toFixed()).toLocaleString("en"));
 
     // plot line chart
     plot_line_chart(month_aggs, "line_chart");
@@ -38,30 +38,43 @@ $.get("data/get_age_data/", function (resp) {
 });
 
 $("body")
-    .on("keyup", "#searchCountry", function () {
-        let input_text = $(this).val().trim();
-        if (input_text == "") {
-            $(".country-card").css("display", "block");
-        } else {
-            $(".country-card").css("display", function () {
-                let card_info = this.getAttribute("data-search").toLowerCase();
-                return card_info.indexOf(input_text) >= 0 ? "block" : "none";
-            });
-        }
-    })
-    .on("click", ".country-card, .fixed-country-card", function () {
-        let card_data = $(this).attr("data");
-        card_data = JSON.parse(unescape(card_data));
-        card_data.active = card_data.Confirmed - (card_data.Deaths + card_data.Recovered);
-        let country = card_data.country.toUpperCase();
-        country = country == "WORLD" ? "All Countries" : country;
+  .on("click", "#accordionSidebar .nav-link", function () {
+    let content_id = $(this).attr("nav-controll");
+    $("#accordionSidebar .nav-link").removeClass("active")
+    $(this).addClass("active")
+    $("#content-wrapper .nav-controller").addClass("d-none");
+    $(content_id).removeClass("d-none");
+    $(content_id).trigger("shown")
+  })
+  .on("keyup", "#searchCountry", function () {
+    let input_text = $(this).val().trim();
+    if (input_text == "") {
+      $(".country-card").css("display", "block");
+    } else {
+      $(".country-card").css("display", function () {
+        let card_info = this.getAttribute("data-search").toLowerCase();
+        return card_info.indexOf(input_text) >= 0 ? "block" : "none";
+      });
+    }
+  })
+  .on("click", ".country-card, .fixed-country-card", function () {
+    let card_data = $(this).attr("data");
+    card_data = JSON.parse(unescape(card_data));
+    card_data.active =
+      card_data.Confirmed - (card_data.Deaths + card_data.Recovered);
+    let country = card_data.country.toUpperCase();
+    country = country == "WORLD" ? "All Countries" : country;
 
-        card_info_country_name.html(country);
-        card_info_total_cases.html(card_data.Confirmed.toLocaleString("en"));
-        card_info_active_cases.html(card_data.active.toLocaleString("en"));
-        card_info_death_cases.html(card_data.Deaths.toLocaleString("en"));
-        card_info_recovered_cases.html(card_data.Recovered.toLocaleString("en"));
-    });
+    card_info_country_name.html(country);
+    card_info_total_cases.html(card_data.Confirmed.toLocaleString("en"));
+    card_info_active_cases.html(card_data.active.toLocaleString("en"));
+    card_info_death_cases.html(card_data.Deaths.toLocaleString("en"));
+    card_info_recovered_cases.html(card_data.Recovered.toLocaleString("en"));
+  })
+  .on("shown", "#analytics", function () {
+    console.log("--> ")
+    render_analytics()
+  })
 
 
 function plot_donut(data, chart_id) {
@@ -72,11 +85,12 @@ function plot_donut(data, chart_id) {
       type: "doughnut",
       data: {
         labels: [
-              'Age: Lessthan 5 years',
-              'Age: 5 - 20 years',
-              'Age: 20 - 40 years',
-              'Age: 40 - 60 years',
-              'Age: More than 60 years'],
+          "Age: Lessthan 5 years",
+          "Age: 5 - 20 years",
+          "Age: 20 - 40 years",
+          "Age: 40 - 60 years",
+          "Age: More than 60 years",
+        ],
         datasets: [
           {
             label: "",
@@ -94,8 +108,8 @@ function plot_donut(data, chart_id) {
       options: {
         responsive: true,
         legend: {
-        //   position: "top",
-            display: false
+          //   position: "top",
+          display: false,
         },
         title: {
           display: false,
@@ -103,6 +117,27 @@ function plot_donut(data, chart_id) {
         animation: {
           animateScale: true,
           animateRotate: true,
+        },
+        tooltips: {
+          callbacks: {
+            title: function (tooltipItem, data) {
+              return data["labels"][tooltipItem[0]["index"]];
+            },
+            label: function (tooltipItem, data) {var dataset = data["datasets"][0];
+              var percent = Math.round(
+                (dataset["data"][tooltipItem["index"]] /
+                  dataset["_meta"][0]["total"]) *
+                  100
+              );
+              return "(" + percent + "%)";
+            }
+          },
+          backgroundColor: "#FFF",
+          titleFontSize: 16,
+          titleFontColor: "#4e73df",
+          bodyFontColor: "#000",
+          bodyFontSize: 14,
+          displayColors: false,
         },
       },
     };
@@ -246,3 +281,13 @@ function plot_progress_bars(data) {
     })
 
 }
+
+function render_analytics() {
+  $.get("get_analytics/", function (resp) {
+
+    console.log("---> ", resp)
+    $("#analytics_chart_1").html(resp.html)
+
+  });
+}
+

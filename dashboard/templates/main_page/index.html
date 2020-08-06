@@ -5,10 +5,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Dashboard - Brand</title>
+    <title>COVID-Analytics</title>
     <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+    <style>
+        .cursor-pointer{
+            cursor: pointer;
+        }
+    </style>
 </head>
 
 <body id="page-top">
@@ -21,14 +26,14 @@
                 </a>
                 <hr class="sidebar-divider my-0">
                 <ul class="nav navbar-nav text-light" id="accordionSidebar">
-                    <li class="nav-item" role="presentation"><a class="nav-link active" href="."><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
-                    <li class="nav-item d-none" role="presentation"><a class="nav-link active" href="."><i class="fas fa-tachometer-alt"></i><span>Analytics</span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link active cursor-pointer" nav-controll="#content" ><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                    <li class="nav-item" role="presentation"><a class="nav-link cursor-pointer" nav-controll="#analytics" ><i class="fas fa-tachometer-alt"></i><span>Analytics</span></a></li>
                 </ul>
                 <div class="text-center d-none d-md-inline"><button class="btn rounded-circle border-0" id="sidebarToggle" type="button"></button></div>
             </div>
         </nav>
         <div class="d-flex flex-column" id="content-wrapper">
-            <div id="content">
+            <div id="content" class="nav-controller">
                 <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top">
                     <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
                         <h3 class="text-dark mb-0">Dashboard</h3>
@@ -61,7 +66,7 @@
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
                                             <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>ToTal CASES</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span id='total_count'>400,000</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span class='display_total_count'>400,000</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -73,10 +78,10 @@
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
                                             <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>ACTIVE CASES</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span id='active_count'>215,000</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span class='display_active_count'>215,000</span></div>
                                         </div>
                                         <div class="col-auto">
-                                            <p id="active_percentage">40%</p>
+                                            <p class="display_active_percentage">40%</p>
                                         </div>
                                     </div>
                                 </div>
@@ -90,12 +95,12 @@
                                             <div class="text-uppercase text-info font-weight-bold text-xs mb-1"><span>DEAD</span></div>
                                             <div class="row no-gutters align-items-center">
                                                 <div class="col-auto">
-                                                    <div class="text-dark font-weight-bold h5 mb-0 mr-3"><span id='death_count'>50000</span></div>
+                                                    <div class="text-dark font-weight-bold h5 mb-0 mr-3"><span class='display_death_count'>50000</span></div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <p id="death_percentage">20%</p>
+                                            <p class="display_death_percentage">20%</p>
                                         </div>
                                     </div>
                                 </div>
@@ -107,7 +112,7 @@
                                     <div class="row align-items-center no-gutters">
                                         <div class="col mr-2">
                                             <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>DAILY AVERAGE</span></div>
-                                            <div class="text-dark font-weight-bold h5 mb-0"><span id="daily_average">18</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span class="display_daily_average">18</span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -221,13 +226,114 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+
+            <div id="analytics" class="nav-controller d-none">
+                <nav class="navbar navbar-light navbar-expand bg-white shadow mb-4 topbar static-top">
+                    <div class="container-fluid"><button class="btn btn-link d-md-none rounded-circle mr-3" id="sidebarToggleTop" type="button"><i class="fas fa-bars"></i></button>
+                        <h3 class="text-dark mb-0">Analytics</h3>
+                        <!-- <form class="form-inline d-none d-sm-inline-block mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                            <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ...">
+                                <div class="input-group-append"><button class="btn btn-primary py-0" type="button"><i class="fas fa-search"></i></button></div>
+                            </div>
+                        </form> -->
+                        <ul class="nav navbar-nav flex-nowrap ml-auto">
+                            <li class="nav-item dropdown d-sm-none no-arrow"><a class="dropdown-toggle nav-link" data-toggle="dropdown" aria-expanded="false" href="#"><i class="fas fa-search"></i></a>
+                                <div class="dropdown-menu dropdown-menu-right p-3 animated--grow-in" role="menu" aria-labelledby="searchDropdown">
+                                    <form class="form-inline mr-auto navbar-search w-100">
+                                        <div class="input-group"><input class="bg-light form-control border-0 small" type="text" placeholder="Search for ...">
+                                            <div class="input-group-append"><button class="btn btn-primary py-0" type="button"><i class="fas fa-search"></i></button></div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-primary py-2">
+                                <div class="card-body">
+                                    <div class="row align-items-center no-gutters">
+                                        <div class="col mr-2">
+                                            <div class="text-uppercase text-primary font-weight-bold text-xs mb-1"><span>ToTal CASES</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span class='display_total_count'>400,000</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-success py-2">
+                                <div class="card-body">
+                                    <div class="row align-items-center no-gutters">
+                                        <div class="col mr-2">
+                                            <div class="text-uppercase text-success font-weight-bold text-xs mb-1"><span>ACTIVE CASES</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span class='display_active_count'>215,000</span></div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <p class="display_active_percentage">40%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-info py-2">
+                                <div class="card-body">
+                                    <div class="row align-items-center no-gutters">
+                                        <div class="col mr-2">
+                                            <div class="text-uppercase text-info font-weight-bold text-xs mb-1"><span>DEAD</span></div>
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col-auto">
+                                                    <div class="text-dark font-weight-bold h5 mb-0 mr-3"><span class='display_death_count'>50000</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <p class="display_death_percentage">20%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-xl-3 mb-4">
+                            <div class="card shadow border-left-warning py-2">
+                                <div class="card-body">
+                                    <div class="row align-items-center no-gutters">
+                                        <div class="col mr-2">
+                                            <div class="text-uppercase text-warning font-weight-bold text-xs mb-1"><span>DAILY AVERAGE</span></div>
+                                            <div class="text-dark font-weight-bold h5 mb-0"><span class="display_daily_average">18</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-10 col-xl-10" id="analytics_chart_1">
+                            <div class="spinner-border text-info" role="status">
+                            <span class="sr-only">Loading...</span>
+                            </div>
+                            <span class="text-info"> Building Models.. </span>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
         <footer class="bg-white sticky-footer">
             <div class="container my-auto">
                 <div class="text-center my-auto copyright"><span>DATA SOURCE: JHONHAWKINS | as of 2020-07-10</span></div>
             </div>
         </footer>
-    </div><a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a></div>
+
+
+    </div>
+
+
+    <a class="border rounded d-inline scroll-to-top" href="#page-top"><i class="fas fa-angle-up"></i></a></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script> -->

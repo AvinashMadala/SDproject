@@ -1,14 +1,28 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
-import pandas as pd
+from django.template import loader
 import os
 import json
 import csv
 import numpy as np
 import random
+from io import BytesIO
+import base64
+from datetime import datetime
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import dask.dataframe as dd
+import dask.array as da
+from sklearn.metrics import r2_score
+from fbprophet import Prophet
+from fbprophet.plot import add_changepoints_to_plot
+# import data models
 from dashboard.models import fetch_age_data
 from dashboard.models import fetch_covid_data
+import dashboard.models as model
 
 # Create your views here.
 def home(request):
@@ -125,3 +139,167 @@ def get_age_group(x):
     elif ( x > 60):
         return '> 60'
 
+
+def get_analytics(request):
+    confirmed_df = model.confirmed_timeseries_data()
+    deaths_df = model.deaths_timeseries_data()
+    recovered_df = model.recovered_timeseries_data()
+
+    dates = confirmed_df.columns[4:]
+    confirmed_df_long = confirmed_df.melt(
+        id_vars=['Province/State', 'Country/Region', 'Lat', 'Long'],
+        value_vars=dates,
+        var_name='Date',
+        value_name='Confirmed'
+    )
+    deaths_df_long = deaths_df.melt(
+        id_vars=['Province/State', 'Country/Region', 'Lat', 'Long'],
+        value_vars=dates,
+        var_name='Date',
+        value_name='Deaths'
+    )
+    recovered_df_long = recovered_df.melt(
+        id_vars=['Province/State', 'Country/Region', 'Lat', 'Long'],
+        value_vars=dates,
+        var_name='Date',
+        value_name='Recovered'
+    )
+    recovered_df_long = recovered_df_long[recovered_df_long['Country/Region'] != 'Canada']
+    # Merging confirmed_df_long and deaths_df_long
+    full_table = confirmed_df_long.merge(
+    right=deaths_df_long,
+    how='left',
+    on=['Province/State', 'Country/Region', 'Date', 'Lat', 'Long']
+    )
+    # Merging full_table and recovered_df_long
+    full_table = full_table.merge(
+            right=recovered_df_long,
+            how='left',
+            on=['Province/State', 'Country/Region', 'Date', 'Lat', 'Long']
+        )
+    template_data = { }
+    data=full_table
+    data['CurrentCases'] = data['Confirmed'] - data['Recovered'] - data['Deaths']
+    date_df = data.groupby('Date')[['Confirmed', 'Recovered', 'Deaths', 'CurrentCases']].sum()
+
+    # ------------------------------------------------------------------------------
+    # running fb prophet
+    global_cases = date_df.reset_index()
+    conf_df=global_cases[['Date','Confirmed']]
+    rec_df=global_cases[['Date','Recovered']]
+    death_df=global_cases[['Date','Deaths']]
+    current_df = global_cases[['Date', 'CurrentCases']]
+
+    conf_df=rename_func(conf_df)
+    rec_df=rename_func(rec_df)
+    death_df=rename_func(death_df)
+    current_df=rename_func(current_df)
+
+    fig, fig_2 = create_model(conf_df)
+    figure_1 = get_bytes_from_img(fig)
+    figure_2 = get_bytes_from_img(fig_2)
+
+    template_data['confirmed_img'] = figure_1
+    template_data['confirmed_img_history'] = figure_2
+    template_data['max_date'] = datetime.strptime( max(conf_df.ds),  "%m/%d/%y").strftime("%d %B, %Y")
+
+    fig, fig_2 = create_model(death_df)
+    figure_1 = get_bytes_from_img(fig)
+    figure_2 = get_bytes_from_img(fig_2)
+
+    template_data['death_img'] = figure_1
+    template_data['death_img_history'] = figure_2
+
+
+    fig, fig_2 = create_model(rec_df)
+    figure_1 = get_bytes_from_img(fig)
+    figure_2 = get_bytes_from_img(fig_2)
+
+    template_data['recovered_img'] = figure_1
+    template_data['recovered_img_history'] = figure_2
+
+
+
+    # changes = add_changepoints_to_plot(fig.gca(), model, predictions)
+    # figure
+
+    # ---------- recovered -------------
+    # model1 = Prophet()
+    # model1.add_seasonality(name='Monthly', period=30.42, fourier_order=5)
+    # recovered_train, recovered_test, divisor = train_test_split(rec_df, 70)
+    # model1.fit(recovered_train)
+    # rfuture_dates = model1.make_future_dataframe(periods=40)
+    # rpredictions = model1.predict(rfuture_dates)
+    # model1.plot(rpredictions)
+    # model1.plot_components(rpredictions)
+    # fig=model1.plot(rpredictions)
+    # changes=add_changepoints_to_plot(fig.gca(),model1,rpredictions)
+
+    # ---------- deaths -------------
+    # model2 = Prophet()
+    # model2.add_seasonality(name='Monthly', period=30.42, fourier_order=5)
+    # deaths_train, deaths_test, divisor = train_test_split(death_df, 70)
+    # model2.fit(deaths_train)
+    # dfuture_dates = model2.make_future_dataframe(periods=40)
+    # dpredictions = model2.predict(dfuture_dates)
+    # model2.plot(dpredictions)
+    # model2.plot_components(dpredictions)
+    # fig=model2.plot(dpredictions)
+    # changes=add_changepoints_to_plot(fig.gca(),model2,dpredictions)
+
+
+    _html = loader.render_to_string(
+        'main_page/analytics-template.html',
+        template_data
+    )
+
+    output = {
+        'html': _html
+    }
+    return JsonResponse(output)
+
+def get_bytes_from_img(fig):
+    buffer = BytesIO()
+    fig.savefig(buffer, format='png')
+    buffer.seek(0)
+    image_png = buffer.getvalue()
+    buffer.close()
+    graphic = base64.b64encode(image_png)
+    graphic = graphic.decode('utf-8')
+    return graphic
+
+def rename_func(dataframe):
+  cols=dataframe.columns
+  dataframe=dataframe.rename(columns={cols[0]:'ds',cols[1]:'y'})
+  return dataframe
+
+def train_test_split(dataframe,ratio):
+  divisor=round((ratio/100)*dataframe.shape[0])
+  train=dataframe.iloc[:divisor]
+  test=dataframe.iloc[divisor:]
+  return train,test,divisor
+
+def create_model(data):
+    modelx = Prophet()
+    modelx.add_seasonality(name='Monthly', period=30.42, fourier_order=5)
+    data_train, data_test, divisor = train_test_split(data, 70)
+    modelx.fit(data_train)
+    future_dates = modelx.make_future_dataframe(periods=35)
+    predictions = modelx.predict(future_dates)
+    modelx.plot(predictions)
+    modelx.plot_components(predictions)
+
+    sns.set()
+
+    fig = modelx.plot(predictions)
+    ax = fig.get_axes()
+    ax[0].set_xlabel('Date')
+    ax[0].set_ylabel('No. of Cases')
+
+    fig_2 = modelx.plot_components(predictions)
+    ax = fig_2.get_axes()
+    ax[0].set_xlabel('Date')
+    ax[2].set_xlabel('Date')
+
+
+    return fig, fig_2
